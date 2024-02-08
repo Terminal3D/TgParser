@@ -31,5 +31,5 @@ func RunParser() {
 		return
 	}
 
-	fmt.Println(sp.Name)
+	fmt.Println(sp)
 }

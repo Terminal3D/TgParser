@@ -1,8 +1,14 @@
 package data
 
 type ProductData struct {
-	Name      string   `json:"name"`
-	Available bool     `json:"available"`
-	Price     float32  `json:"price"`
-	Sizes     []string `json:"sizes"`
+	Name      string     `json:"name"`
+	Brand     string     `json:"brand"`
+	Available bool       `json:"available"`
+	Price     float64    `json:"price"`
+	Sizes     []SizeData `json:"sizes"`
+}
+
+type SizeData struct {
+	Size     string `json:"size"`
+	Quantity string `json:"qty"`
 }
