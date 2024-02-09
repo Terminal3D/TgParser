@@ -4,6 +4,8 @@ import (
 	"TgParser/internal/marketParser/data"
 	"fmt"
 	"golang.org/x/net/html"
+	"log"
+	"strconv"
 	"strings"
 )
 
@@ -61,7 +63,11 @@ func getSizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]da
 					}
 
 					if attr.Key == "data-stock-qty" {
-						item.Quantity = attr.Val
+						item.Quantity, err = strconv.Atoi(attr.Val)
+						if err != nil {
+							log.Println("Error parsing quantity for size " + item.Size)
+							item.Quantity = 0
+						}
 					}
 				}
 				sizes = append(sizes, item)

@@ -10,5 +10,5 @@ type ProductData struct {
 
 type SizeData struct {
 	Size     string `json:"size"`
-	Quantity string `json:"qty"`
+	Quantity int    `json:"qty"`
 }

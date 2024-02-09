@@ -25,7 +25,7 @@ func ParseSP(resp *http.Response) (data.ProductData, error) {
 
 	resp.Body.Close()
 
-	wg.Add(5)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -42,12 +42,6 @@ func ParseSP(resp *http.Response) (data.ProductData, error) {
 	go func() {
 		defer wg.Done()
 		bodyReader := bytes.NewReader(bodyBytes)
-		parsedData.Available = parseAvailable(bodyReader)
-	}()
-
-	go func() {
-		defer wg.Done()
-		bodyReader := bytes.NewReader(bodyBytes)
 		parsedData.Price = parsePrice(bodyReader)
 	}()
 
@@ -59,6 +53,10 @@ func ParseSP(resp *http.Response) (data.ProductData, error) {
 
 	wg.Wait()
 
+	if parsedData.Available = parseAvailable(&parsedData); !parsedData.Available {
+		return parsedData, fmt.Errorf("item is not available")
+	}
+
 	return parsedData, nil
 }
 
@@ -66,7 +64,8 @@ func parseName(resp *bytes.Reader) string {
 	tokenizer := html.NewTokenizer(resp)
 	name, err := getBlockTextByID(tokenizer, "span", "lblProductName")
 	if err != nil {
-		log.Println(err)
+		log.Print(err)
+		log.Println(" for name")
 		return ""
 	}
 	return name
@@ -77,15 +76,27 @@ func parseBrand(resp *bytes.Reader) string {
 	tokenizer := html.NewTokenizer(resp)
 	brand, err := getBlockTextByID(tokenizer, "span", "lblProductBrand")
 	if err != nil {
-		log.Println(err)
+		log.Print(err)
+		log.Println(" for brand")
 		return ""
 	}
 	return brand
 }
 
-func parseAvailable(resp *bytes.Reader) bool {
-	/* TODO checking availability by verifying fields name and qty from sizes list */
-	return true
+func parseAvailable(parsedData *data.ProductData) bool {
+
+	if parsedData.Name == "" {
+		return false
+	}
+
+	for _, size := range parsedData.Sizes {
+
+		if size.Quantity != 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 func parsePrice(resp *bytes.Reader) float64 {
