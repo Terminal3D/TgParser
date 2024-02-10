@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"TgParser/internal/marketParser/data"
+	"TgParser/internal/marketParser/models"
 	"bytes"
 	"fmt"
 	"golang.org/x/net/html"
@@ -13,8 +13,8 @@ import (
 	"sync"
 )
 
-func ParseSP(resp *http.Response) (data.ProductData, error) {
-	var parsedData data.ProductData
+func ParseSP(resp *http.Response) (models.ProductData, error) {
+	var parsedData models.ProductData
 
 	var wg sync.WaitGroup
 
@@ -62,7 +62,7 @@ func ParseSP(resp *http.Response) (data.ProductData, error) {
 
 func parseName(resp *bytes.Reader) string {
 	tokenizer := html.NewTokenizer(resp)
-	name, err := getBlockTextByID(tokenizer, "span", "lblProductName")
+	name, err := blockTextByID(tokenizer, "span", "lblProductName")
 	if err != nil {
 		log.Print(err)
 		log.Println(" for name")
@@ -74,7 +74,7 @@ func parseName(resp *bytes.Reader) string {
 func parseBrand(resp *bytes.Reader) string {
 
 	tokenizer := html.NewTokenizer(resp)
-	brand, err := getBlockTextByID(tokenizer, "span", "lblProductBrand")
+	brand, err := blockTextByID(tokenizer, "span", "lblProductBrand")
 	if err != nil {
 		log.Print(err)
 		log.Println(" for brand")
@@ -83,7 +83,7 @@ func parseBrand(resp *bytes.Reader) string {
 	return brand
 }
 
-func parseAvailable(parsedData *data.ProductData) bool {
+func parseAvailable(parsedData *models.ProductData) bool {
 
 	if parsedData.Name == "" {
 		return false
@@ -101,7 +101,7 @@ func parseAvailable(parsedData *data.ProductData) bool {
 
 func parsePrice(resp *bytes.Reader) float64 {
 	tokenizer := html.NewTokenizer(resp)
-	price, err := getBlockTextByID(tokenizer, "span", "lblSellingPrice")
+	price, err := blockTextByID(tokenizer, "span", "lblSellingPrice")
 	if err != nil {
 		log.Println(err)
 		return -1.0
@@ -117,13 +117,12 @@ func parsePrice(resp *bytes.Reader) float64 {
 	return floatPrice
 }
 
-func parseSizes(resp *bytes.Reader) []data.SizeData {
+func parseSizes(resp *bytes.Reader) []models.SizeData {
 	tokenizer := html.NewTokenizer(resp)
-	sizes, err := getSizesListSP(tokenizer, "ul", "ulSizes")
+	sizes, err := sizesListSP(tokenizer, "ul", "ulSizes")
 	if err != nil {
 		log.Println(err)
-		return []data.SizeData{}
+		return []models.SizeData{}
 	}
-	fmt.Println(sizes)
 	return sizes
 }

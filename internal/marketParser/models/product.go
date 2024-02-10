@@ -1,4 +1,4 @@
-package data
+package models
 
 type ProductData struct {
 	Name      string     `json:"name"`

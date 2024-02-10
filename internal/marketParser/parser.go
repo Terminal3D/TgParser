@@ -25,6 +25,10 @@ func RunParser() {
 		return
 	}
 
+	//t, _ := io.ReadAll(resp.Body)
+	//
+	//fmt.Println(string(t))
+
 	sp, err := parsers.ParseSP(resp)
 	if err != nil {
 		log.Println(err)
