@@ -1,3 +1,3 @@
--- name: DeleteItemById :exec
+-- name: DeleteItem :exec
 DELETE FROM item
-WHERE id = $1;
+WHERE name = $1 AND brand = $2;

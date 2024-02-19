@@ -6,8 +6,7 @@ CREATE TABLE item
     price      NUMERIC(10, 2) NOT NULL,
     available  BOOLEAN        NOT NULL,
     url        VARCHAR(255)   NOT NULL,
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_check TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT product_data_name_brand_unique UNIQUE (name, brand)
 );
 

@@ -17,6 +17,9 @@ type apiConfig struct {
 }
 
 func RunApp() {
+
+	ctx := context.Background()
+
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("Couldn't get DB URL")
@@ -30,51 +33,82 @@ func RunApp() {
 	apiCfg := apiConfig{
 		DB: database.New(conn),
 	}
-
-	for err == nil {
-		var inputURL string
-		_, err := fmt.Scan(&inputURL)
-
+	var command string
+	for command != "stop" {
+		_, err := fmt.Scan(&command)
 		if err != nil {
 			log.Println(err)
-			break
+			return
 		}
-		parsedData, err := marketParser.RunParser(inputURL)
-		if err != nil {
-			log.Println(err)
-			break
+		switch command {
+		case "add":
+			AddItem(&apiCfg, ctx, false)
+		case "update":
+			AddItem(&apiCfg, ctx, true)
+		default:
+			command = "stop"
 		}
-
-		fmt.Println("Received data:", *parsedData)
-		itemUUID := uuid.New()
-		insertParamsItem := database.InsertItemParams{
-			ID:        itemUUID,
-			Name:      parsedData.Name,
-			Brand:     parsedData.Brand,
-			Price:     fmt.Sprintf("%.2f", parsedData.Price),
-			Available: parsedData.Available,
-			Url:       inputURL,
-		}
-
-		item, err := apiCfg.DB.InsertItem(context.Background(), insertParamsItem)
-		if err != nil {
-			log.Println(err)
-			break
-		}
-
-		for _, size := range parsedData.Sizes {
-			insertParamsSize := database.InsertSizeParams{
-				ID:        uuid.New(),
-				ProductID: item.ID,
-				Size:      size.Size,
-				Quantity:  int32(size.Quantity),
-			}
-			_, err := apiCfg.DB.InsertSize(context.Background(), insertParamsSize)
-			if err != nil {
-				log.Println(err)
-				break
-			}
-		}
-		log.Println("Item Successfully added")
 	}
+
+}
+
+func AddItem(apiCfg *apiConfig, ctx context.Context, update bool) {
+
+	var inputURL string
+
+	_, err := fmt.Scan(&inputURL)
+	if inputURL == "stop" {
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	parsedData, err := marketParser.RunParser(inputURL)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println("Received data:", *parsedData)
+	itemUUID := uuid.New()
+	insertParamsItem := database.InsertItemParams{
+		ID:        itemUUID,
+		Name:      parsedData.Name,
+		Brand:     parsedData.Brand,
+		Price:     fmt.Sprintf("%.2f", parsedData.Price),
+		Available: parsedData.Available,
+		Url:       inputURL,
+	}
+
+	if update {
+		err := apiCfg.DB.DeleteItem(ctx, database.DeleteItemParams{
+			Name:  insertParamsItem.Name,
+			Brand: insertParamsItem.Brand,
+		})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+
+	item, err := apiCfg.DB.InsertItem(ctx, insertParamsItem)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, size := range parsedData.Sizes {
+		insertParamsSize := database.InsertSizeParams{
+			ID:        uuid.New(),
+			ProductID: item.ID,
+			Size:      size.Size,
+			Quantity:  int32(size.Quantity),
+		}
+		_, err := apiCfg.DB.InsertSize(ctx, insertParamsSize)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+	}
+	log.Println("Item Successfully added")
 }
