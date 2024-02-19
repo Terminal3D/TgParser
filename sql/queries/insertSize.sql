@@ -1,4 +1,4 @@
 -- name: InsertSize :one
-INSERT INTO size (product_id, size, quantity)
-VALUES ($1, $2, $3)
+INSERT INTO size (id, product_id, size, quantity)
+VALUES ($1, $2, $3, $4)
 RETURNING *;

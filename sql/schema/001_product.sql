@@ -1,6 +1,6 @@
 CREATE TABLE item
 (
-    id         BIGSERIAL PRIMARY KEY,
+    id         UUID PRIMARY KEY,
     name       VARCHAR(255)   NOT NULL,
     brand      VARCHAR(255)   NOT NULL,
     price      NUMERIC(10, 2) NOT NULL,
@@ -13,8 +13,8 @@ CREATE TABLE item
 
 CREATE TABLE size
 (
-    id         BIGSERIAL PRIMARY KEY,
-    product_id BIGINT      NOT NULL REFERENCES item (id),
+    id         UUID PRIMARY KEY,
+    product_id UUID        NOT NULL REFERENCES item (id) ON DELETE CASCADE ,
     size       VARCHAR(50) NOT NULL,
     quantity   INTEGER     NOT NULL
 );

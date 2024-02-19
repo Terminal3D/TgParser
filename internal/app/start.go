@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"log"
 	"os"
@@ -45,7 +46,9 @@ func RunApp() {
 		}
 
 		fmt.Println("Received data:", *parsedData)
+		itemUUID := uuid.New()
 		insertParamsItem := database.InsertItemParams{
+			ID:        itemUUID,
 			Name:      parsedData.Name,
 			Brand:     parsedData.Brand,
 			Price:     fmt.Sprintf("%.2f", parsedData.Price),
@@ -61,6 +64,7 @@ func RunApp() {
 
 		for _, size := range parsedData.Sizes {
 			insertParamsSize := database.InsertSizeParams{
+				ID:        uuid.New(),
 				ProductID: item.ID,
 				Size:      size.Size,
 				Quantity:  int32(size.Quantity),
