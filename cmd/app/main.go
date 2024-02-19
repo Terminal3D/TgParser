@@ -1,8 +1,10 @@
 package main
 
-import "TgParser/internal/marketParser"
+import (
+	"TgParser/internal/app"
+)
 
 func main() {
-	marketParser.RunParser()
+	app.RunApp()
 
 }

@@ -9,13 +9,16 @@ import (
 	"strings"
 )
 
+const ItemSizeAttrSP = "data-text"
+const ItemQuantityAttrSP = "data-stock-qty"
+
 func findTag(tokenizer *html.Tokenizer, blockName string, id string) error {
 
 	for {
 		tt := tokenizer.Next()
 		switch {
 		case tt == html.ErrorToken:
-			return fmt.Errorf("id not found")
+			return fmt.Errorf("%s for %s block not found", id, blockName)
 
 		case tt == html.StartTagToken:
 			token := tokenizer.Token()
@@ -58,11 +61,11 @@ func sizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]model
 			if token.Data == "li" {
 				var item models.SizeData
 				for _, attr := range token.Attr {
-					if attr.Key == "data-text" {
+					if attr.Key == ItemSizeAttrSP {
 						item.Size = attr.Val
 					}
 
-					if attr.Key == "data-stock-qty" {
+					if attr.Key == ItemQuantityAttrSP {
 						item.Quantity, err = strconv.Atoi(attr.Val)
 						if err != nil {
 							log.Println("Error parsing quantity for size " + item.Size)
