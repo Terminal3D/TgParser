@@ -20,7 +20,7 @@ func displayData(bot *tgbotapi.BotAPI, chatID int64, data ...*models.ProductData
 	for _, productData := range data {
 
 		responseMsg.WriteString("\n\nНазвание: " + productData.Name + "\nБрэнд: " +
-			productData.Brand + "\nЦена: " + fmt.Sprintf("%.2f", productData.Price) + "\nРазмеры:")
+			productData.Brand + "\nЦена: " + fmt.Sprintf("%.2f", productData.Price))
 
 		for _, size := range productData.Sizes {
 			responseMsg.WriteString("\nРазмер: " + size.Size + ", количество: " + fmt.Sprintf("%d", size.Quantity))
@@ -34,7 +34,7 @@ func displayData(bot *tgbotapi.BotAPI, chatID int64, data ...*models.ProductData
 	return nil
 }
 
-func handleAddItem(inputURL string, update bool) (*models.ProductData, error) {
+func handleAddItem(inputURL string) (*models.ProductData, error) {
 
 	parsedData, err := marketParser.RunParser(inputURL)
 	if err != nil {
@@ -51,15 +51,10 @@ func handleAddItem(inputURL string, update bool) (*models.ProductData, error) {
 		Url:       inputURL,
 	}
 
-	if update {
-		err := apiDB.DeleteItem(ctx, database.DeleteItemParams{
-			Name:  insertParamsItem.Name,
-			Brand: insertParamsItem.Brand,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
+	apiDB.DeleteItem(ctx, database.DeleteItemParams{
+		Name:  insertParamsItem.Name,
+		Brand: insertParamsItem.Brand,
+	})
 
 	item, err := apiDB.InsertItem(ctx, insertParamsItem)
 	if err != nil {
@@ -121,6 +116,29 @@ var filterMenu = tgbotapi.NewInlineKeyboardMarkup(
 	),
 )
 
+func showFilterMenu(bot *tgbotapi.BotAPI, chatID int64) error {
+	msg := tgbotapi.NewMessage(chatID, "Выберите тип фильтрации")
+	msg.ReplyMarkup = filterMenu
+	msg.ParseMode = "Markdown"
+
+	if _, err := bot.Send(msg); err != nil {
+		return fmt.Errorf("error sending filter msg, error: %v", err)
+	}
+	userStates.Set(chatID, AwaitingFilterModeState)
+	return nil
+}
+
+func showStartMenu(bot *tgbotapi.BotAPI, chatID int64) error {
+	msg := tgbotapi.NewMessage(chatID, "Выберите действие")
+	msg.ReplyMarkup = startMenu
+	msg.ParseMode = "Markdown"
+
+	if _, err := bot.Send(msg); err != nil {
+		return fmt.Errorf("error sending start msg, error: %v", err)
+	}
+	return nil
+}
+
 func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
 	var text string
 
@@ -133,6 +151,10 @@ func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
 		}
 
 		if err = displayData(bot, chatID, models.NewFromSQL(items)...); err != nil {
+			return err
+		}
+
+		if err = showStartMenu(bot, chatID); err != nil {
 			return err
 		}
 
@@ -156,12 +178,8 @@ func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
 
 	default:
 		userStates.Delete(chatID)
-		msg := tgbotapi.NewMessage(chatID, "Выберите тип фильтрации")
-		msg.ReplyMarkup = startMenu
-		msg.ParseMode = "Markdown"
-
-		if _, err := bot.Send(msg); err != nil {
-			return fmt.Errorf("error sending start msg, error: %v", err)
+		if err := showFilterMenu(bot, chatID); err != nil {
+			return err
 		}
 	}
 

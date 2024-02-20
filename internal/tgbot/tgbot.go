@@ -46,19 +46,21 @@ func Launch(apiToken string, queries *database.Queries, ctxIn context.Context) e
 	}
 
 	for update := range updates {
-		if update.CallbackQuery != nil {
-			if err = handleCallbacks(bot, &update); err != nil {
-				log.Println(err)
+		go func(upd tgbotapi.Update) { // Ассинхронный запуск обработчиков
+			if upd.CallbackQuery != nil {
+				if err := handleCallbacks(bot, &upd); err != nil {
+					log.Println(err)
+				}
+			} else if upd.Message.IsCommand() {
+				if err := handleCommand(bot, &upd); err != nil {
+					log.Println(err)
+				}
+			} else {
+				if err := handleMessage(bot, &upd); err != nil {
+					log.Println(err)
+				}
 			}
-		} else if update.Message.IsCommand() {
-			if err = handleCommand(bot, &update); err != nil {
-				log.Println(err)
-			}
-		} else {
-			if err = handleMessage(bot, &update); err != nil {
-				log.Println(err)
-			}
-		}
+		}(update)
 	}
 	return nil
 }
@@ -83,13 +85,9 @@ func handleCallbacks(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 		userStates.Set(chatID, AwaitingUrlState)
 
 	case "list_items":
-		msg := tgbotapi.NewMessage(chatID, "Выберите тип фильтрации:")
-		msg.ReplyMarkup = filterMenu
-		msg.ParseMode = "Markdown"
-		if _, err := bot.Send(msg); err != nil {
-			return fmt.Errorf("failed to send add_item response. error: %v", msg)
+		if err := showFilterMenu(bot, chatID); err != nil {
+			return err
 		}
-		userStates.Set(chatID, AwaitingFilterModeState)
 	}
 
 	return nil
@@ -99,12 +97,8 @@ func handleCommand(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 	command := update.Message.Command()
 	switch command {
 	case "start":
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите действие")
-		msg.ReplyMarkup = startMenu
-		msg.ParseMode = "Markdown"
-
-		if _, err := bot.Send(msg); err != nil {
-			return fmt.Errorf("error sending start msg, error: %v", err)
+		if err := showStartMenu(bot, update.Message.Chat.ID); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -127,7 +121,7 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 
 			return nil
 		}
-		productData, err := handleAddItem(url, false)
+		productData, err := handleAddItem(url)
 		if err != nil {
 			if _, err1 := bot.Send(tgbotapi.NewMessage(chatID, err.Error())); err1 != nil {
 				return fmt.Errorf("failed to send message for error: %v. sending error: %v", err, err1)
@@ -139,6 +133,9 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 			return err
 		}
 
+		if err = showStartMenu(bot, update.Message.Chat.ID); err != nil {
+			return err
+		}
 		return nil
 
 	case AwaitingNameFilter:
@@ -186,7 +183,18 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 	case AwaitingBrandAndPriceFilter:
 		userStates.Delete(chatID)
 		input := strings.Split(update.Message.Text, ",")
+		if len(input) != 2 {
+			userStates.Delete(chatID)
+			if _, err := bot.Send(tgbotapi.NewMessage(chatID, "Неправильный формат ввода.")); err != nil {
+				return err
+			}
 
+			if err := showFilterMenu(bot, chatID); err != nil {
+				return err
+			}
+
+			return fmt.Errorf("wrong input format")
+		}
 		brand := strings.TrimSpace(input[0])
 		price := strings.TrimSpace(input[1])
 
