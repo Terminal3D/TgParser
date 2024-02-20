@@ -19,10 +19,6 @@ func RunParser(inputURL string) (*models.ProductData, error) {
 		return nil, err
 	}
 
-	//t, _ := io.ReadAll(resp.Body)
-	//
-	//fmt.Println(string(t))
-
 	sp, err := parsers.ParseSP(resp)
 	if err != nil {
 		return nil, err

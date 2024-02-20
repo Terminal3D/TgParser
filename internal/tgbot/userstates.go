@@ -2,7 +2,7 @@ package tgbot
 
 import "sync"
 
-// AwaitingUrlState User's states
+// User's states
 const (
 	AwaitingUrlState            = "awaiting_url"
 	AwaitingFilterModeState     = "awaiting_filter_mode"
@@ -10,6 +10,7 @@ const (
 	AwaitingBrandFilter         = "awaiting_brand_filter"
 	AwaitingPriceFilter         = "awaiting_price_filter"
 	AwaitingBrandAndPriceFilter = "awaiting_brand_and_price_filter"
+	AwaitingDeleteItem          = "awaiting_delete_item"
 )
 
 type UserStates struct {
@@ -30,8 +31,8 @@ func (us *UserStates) Set(userID int64, state string) {
 }
 
 func (us *UserStates) Get(userID int64) (string, bool) {
-	us.mu.Lock()
-	defer us.mu.Unlock()
+	us.mu.RLock()
+	defer us.mu.RUnlock()
 	state, exists := us.states[userID]
 	return state, exists
 }

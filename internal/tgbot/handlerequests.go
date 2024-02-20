@@ -77,68 +77,6 @@ func handleAddItem(inputURL string) (*models.ProductData, error) {
 	return parsedData, nil
 }
 
-var filterMenu = tgbotapi.NewInlineKeyboardMarkup(
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(
-			"Без фильтров",
-			"no_filter",
-		),
-	),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(
-			"По названию",
-			"name_filter",
-		),
-	),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(
-			"По бренду",
-			"brand_filter",
-		),
-	),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(
-			"По цене",
-			"price_filter",
-		),
-	),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(
-			"По бренду и цене",
-			"brand_and_price_filter",
-		),
-	),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData(
-			"отмена",
-			"back",
-		),
-	),
-)
-
-func showFilterMenu(bot *tgbotapi.BotAPI, chatID int64) error {
-	msg := tgbotapi.NewMessage(chatID, "Выберите тип фильтрации")
-	msg.ReplyMarkup = filterMenu
-	msg.ParseMode = "Markdown"
-
-	if _, err := bot.Send(msg); err != nil {
-		return fmt.Errorf("error sending filter msg, error: %v", err)
-	}
-	userStates.Set(chatID, AwaitingFilterModeState)
-	return nil
-}
-
-func showStartMenu(bot *tgbotapi.BotAPI, chatID int64) error {
-	msg := tgbotapi.NewMessage(chatID, "Выберите действие")
-	msg.ReplyMarkup = startMenu
-	msg.ParseMode = "Markdown"
-
-	if _, err := bot.Send(msg); err != nil {
-		return fmt.Errorf("error sending start msg, error: %v", err)
-	}
-	return nil
-}
-
 func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
 	var text string
 

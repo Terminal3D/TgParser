@@ -13,7 +13,7 @@ CREATE TABLE item
 CREATE TABLE size
 (
     id         UUID PRIMARY KEY,
-    product_id UUID        NOT NULL REFERENCES item (id) ON DELETE CASCADE ,
+    product_id UUID        NOT NULL REFERENCES item (id) ON DELETE CASCADE,
     size       VARCHAR(50) NOT NULL,
     quantity   INTEGER     NOT NULL
 );
