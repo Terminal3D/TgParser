@@ -1,17 +1,13 @@
 package tgbot
 
 import (
-	"TgParser/internal/database"
-	"TgParser/internal/marketParser"
-	"TgParser/internal/marketParser/models"
+	"TgParser/internal/data"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/google/uuid"
-	"log"
 	"strings"
 )
 
-func displayData(bot *tgbotapi.BotAPI, chatID int64, data ...*models.ProductData) error {
+func displayData(bot *tgbotapi.BotAPI, chatID int64, data ...*data.ProductData) error {
 
 	var responseMsg strings.Builder
 	if len(data) == 0 {
@@ -34,53 +30,10 @@ func displayData(bot *tgbotapi.BotAPI, chatID int64, data ...*models.ProductData
 	return nil
 }
 
-func handleAddItem(inputURL string) (*models.ProductData, error) {
-
-	parsedData, err := marketParser.RunParser(inputURL)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("Received data:", *parsedData)
-	itemUUID := uuid.New()
-	insertParamsItem := database.InsertItemParams{
-		ID:        itemUUID,
-		Name:      parsedData.Name,
-		Brand:     parsedData.Brand,
-		Price:     fmt.Sprintf("%.2f", parsedData.Price),
-		Available: parsedData.Available,
-		Url:       inputURL,
-	}
-
-	apiDB.DeleteItem(ctx, database.DeleteItemParams{
-		Name:  insertParamsItem.Name,
-		Brand: insertParamsItem.Brand,
-	})
-
-	item, err := apiDB.InsertItem(ctx, insertParamsItem)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, size := range parsedData.Sizes {
-		insertParamsSize := database.InsertSizeParams{
-			ID:        uuid.New(),
-			ProductID: item.ID,
-			Size:      size.Size,
-			Quantity:  int32(size.Quantity),
-		}
-		_, err := apiDB.InsertSize(ctx, insertParamsSize)
-		if err != nil {
-			log.Println(err)
-			break
-		}
-	}
-	return parsedData, nil
-}
-
-func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
+func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, callbackData string) error {
 	var text string
 
-	switch data {
+	switch callbackData {
 	case "no_filter":
 		userStates.Delete(chatID)
 		items, err := apiDB.GetAllItems(ctx)
@@ -88,10 +41,9 @@ func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
 			return err
 		}
 
-		if err = displayData(bot, chatID, models.NewFromSQL(items)...); err != nil {
+		if err = displayData(bot, chatID, data.NewFromSQL(items)...); err != nil {
 			return err
 		}
-
 		if err = showStartMenu(bot, chatID); err != nil {
 			return err
 		}
@@ -116,9 +68,10 @@ func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, data string) error {
 
 	default:
 		userStates.Delete(chatID)
-		if err := showFilterMenu(bot, chatID); err != nil {
+		if err := showStartMenu(bot, chatID); err != nil {
 			return err
 		}
+		return nil
 	}
 
 	if _, err := bot.Send(tgbotapi.NewMessage(chatID, text)); err != nil {

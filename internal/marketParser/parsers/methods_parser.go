@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"TgParser/internal/marketParser/models"
+	"TgParser/internal/data"
 	"fmt"
 	"golang.org/x/net/html"
 	"log"
@@ -44,13 +44,13 @@ func blockTextByID(tokenizer *html.Tokenizer, blockName string, id string) (stri
 	return strings.TrimSpace(text(tokenizer)), nil
 }
 
-func sizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]models.SizeData, error) {
+func sizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]data.SizeData, error) {
 	err := findTag(tokenizer, listType, id)
 	if err != nil {
 		return nil, err
 	}
 
-	var sizes []models.SizeData
+	var sizes []data.SizeData
 	for {
 		tt := tokenizer.Next()
 		switch tt {
@@ -59,7 +59,7 @@ func sizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]model
 		case html.StartTagToken:
 			token := tokenizer.Token()
 			if token.Data == "li" {
-				var item models.SizeData
+				var item data.SizeData
 				for _, attr := range token.Attr {
 					if attr.Key == ItemSizeAttrSP {
 						item.Size = attr.Val

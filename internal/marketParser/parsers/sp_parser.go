@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"TgParser/internal/marketParser/models"
+	"TgParser/internal/data"
 	"bytes"
 	"fmt"
 	"golang.org/x/net/html"
@@ -13,8 +13,8 @@ import (
 	"sync"
 )
 
-func ParseSP(resp *http.Response) (models.ProductData, error) {
-	var parsedData models.ProductData
+func ParseSP(resp *http.Response) (data.ProductData, error) {
+	var parsedData data.ProductData
 
 	var wg sync.WaitGroup
 
@@ -83,7 +83,7 @@ func parseBrand(resp *bytes.Reader) string {
 	return brand
 }
 
-func parseAvailable(parsedData *models.ProductData) bool {
+func parseAvailable(parsedData *data.ProductData) bool {
 
 	if parsedData.Name == "" {
 		return false
@@ -117,12 +117,12 @@ func parsePrice(resp *bytes.Reader) float64 {
 	return floatPrice
 }
 
-func parseSizes(resp *bytes.Reader) []models.SizeData {
+func parseSizes(resp *bytes.Reader) []data.SizeData {
 	tokenizer := html.NewTokenizer(resp)
 	sizes, err := sizesListSP(tokenizer, "ul", "ulSizes")
 	if err != nil {
 		log.Println(err)
-		return []models.SizeData{}
+		return []data.SizeData{}
 	}
 	return sizes
 }

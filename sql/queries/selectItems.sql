@@ -21,3 +21,6 @@ WHERE brand = $1 AND price <= $2;
 SELECT item.id, item.name, item.brand, item.price, item.available, item.url, size.size, size.quantity
 FROM item JOIN size ON item.id = size.product_id
 WHERE name = $1;
+
+-- name: GetAllItemsWithoutSizes :many
+SELECT * FROM item WHERE available = true;

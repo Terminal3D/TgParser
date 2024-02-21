@@ -59,6 +59,41 @@ func (q *Queries) GetAllItems(ctx context.Context) ([]GetAllItemsRow, error) {
 	return items, nil
 }
 
+const getAllItemsWithoutSizes = `-- name: GetAllItemsWithoutSizes :many
+SELECT id, name, brand, price, available, url, last_check FROM item WHERE available = true
+`
+
+func (q *Queries) GetAllItemsWithoutSizes(ctx context.Context) ([]Item, error) {
+	rows, err := q.db.QueryContext(ctx, getAllItemsWithoutSizes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Item
+	for rows.Next() {
+		var i Item
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Brand,
+			&i.Price,
+			&i.Available,
+			&i.Url,
+			&i.LastCheck,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getItemsByBrand = `-- name: GetItemsByBrand :many
 SELECT item.id, item.name, item.brand, item.price, item.available, item.url, size.size, size.quantity
 FROM item JOIN size ON item.id = size.product_id

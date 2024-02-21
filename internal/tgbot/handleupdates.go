@@ -1,25 +1,25 @@
 package tgbot
 
 import (
+	"TgParser/internal/data"
 	"TgParser/internal/database"
-	"TgParser/internal/marketParser/models"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"strings"
 )
 
 func handleCallbacks(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
-	data := update.CallbackQuery.Data
+	callbackData := update.CallbackQuery.Data
 	chatID := update.CallbackQuery.From.ID
 
 	if state, ok := userStates.Get(chatID); ok && state == AwaitingFilterModeState {
-		err := handleFiltersPick(bot, chatID, data)
+		err := handleFiltersPick(bot, chatID, callbackData)
 		if err != nil {
 			return err
 		}
 	}
 
-	switch data {
+	switch callbackData {
 	case "add_item":
 		msg := tgbotapi.NewMessage(chatID, "Укажите URL товара (введите \"отмена\", чтобы отменить запрос):")
 		if _, err := bot.Send(msg); err != nil {
@@ -71,7 +71,7 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 
 			return nil
 		}
-		productData, err := handleAddItem(url)
+		productData, err := HandleAddItem(url, apiDB, ctx)
 		if err != nil {
 			if _, err1 := bot.Send(tgbotapi.NewMessage(chatID, err.Error())); err1 != nil {
 				return fmt.Errorf("failed to send message for error: %v. sending error: %v", err, err1)
@@ -97,7 +97,7 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 			return err
 		}
 
-		if err = displayData(bot, chatID, models.NewFromSQL(items)...); err != nil {
+		if err = displayData(bot, chatID, data.NewFromSQL(items)...); err != nil {
 			return err
 		}
 		return nil
@@ -111,7 +111,7 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 			return err
 		}
 
-		if err = displayData(bot, chatID, models.NewFromSQL(items)...); err != nil {
+		if err = displayData(bot, chatID, data.NewFromSQL(items)...); err != nil {
 			return err
 		}
 		return nil
@@ -125,7 +125,7 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 			return err
 		}
 
-		if err = displayData(bot, chatID, models.NewFromSQL(items)...); err != nil {
+		if err = displayData(bot, chatID, data.NewFromSQL(items)...); err != nil {
 			return err
 		}
 		return nil
@@ -156,7 +156,7 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 			return err
 		}
 
-		if err = displayData(bot, chatID, models.NewFromSQL(items)...); err != nil {
+		if err = displayData(bot, chatID, data.NewFromSQL(items)...); err != nil {
 			return err
 		}
 		return nil

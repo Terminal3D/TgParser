@@ -1,6 +1,7 @@
 package tgbot
 
 import (
+	"TgParser/internal/data"
 	"TgParser/internal/database"
 	"context"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -13,7 +14,7 @@ var (
 	ctx        context.Context
 )
 
-func Launch(apiToken string, queries *database.Queries, ctxIn context.Context) error {
+func Launch(apiToken string, queries *database.Queries, ctxIn context.Context, updateInfoChan chan data.UpdateInfo) error {
 	apiDB = queries
 	ctx = ctxIn
 	bot, err := tgbotapi.NewBotAPI(apiToken)
@@ -26,6 +27,8 @@ func Launch(apiToken string, queries *database.Queries, ctxIn context.Context) e
 	if err != nil {
 		return err
 	}
+
+	go handleUpdateInfo(updateInfoChan)
 
 	for update := range updates {
 		go func(upd tgbotapi.Update) { // Ассинхронный запуск обработчиков
@@ -45,4 +48,10 @@ func Launch(apiToken string, queries *database.Queries, ctxIn context.Context) e
 		}(update)
 	}
 	return nil
+}
+
+func handleUpdateInfo(updateInfoChan chan data.UpdateInfo) {
+	for updateInfo := range updateInfoChan {
+
+	}
 }

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"TgParser/internal/data"
 	"TgParser/internal/database"
 	"TgParser/internal/tgbot"
+	"TgParser/internal/updater"
 	"context"
 	"database/sql"
 	_ "github.com/lib/pq"
@@ -28,7 +30,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := tgbot.Launch(apiToken, database.New(conn), ctx); err != nil {
+	apiDB := database.New(conn)
+
+	updateInfoChan := make(chan data.UpdateInfo, 4)
+
+	go updater.Launch(apiDB, ctx, updateInfoChan)
+
+	if err := tgbot.Launch(apiToken, apiDB, ctx, updateInfoChan); err != nil {
 		log.Fatal(err)
 	}
+
 }

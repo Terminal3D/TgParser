@@ -1,13 +1,13 @@
 package marketParser
 
 import (
-	"TgParser/internal/marketParser/models"
+	"TgParser/internal/data"
 	"TgParser/internal/marketParser/parsers"
 	"net/http"
 	"net/url"
 )
 
-func RunParser(inputURL string) (*models.ProductData, error) {
+func RunParser(inputURL string) (*data.ProductData, error) {
 
 	uri, err := url.ParseRequestURI(inputURL)
 	if err != nil {
