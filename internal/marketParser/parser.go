@@ -16,13 +16,15 @@ func RunParser(inputURL string) (*data.ProductData, error) {
 
 	resp, err := http.Get(uri.String())
 	if err != nil {
-		return nil, err
+		return &data.ProductData{Available: false, URL: inputURL}, err
 	}
 
 	sp, err := parsers.ParseSP(resp)
 	if err != nil {
-		return nil, err
+		return &data.ProductData{Available: false, URL: inputURL}, err
 	}
+
+	sp.URL = inputURL
 
 	return &sp, nil
 }

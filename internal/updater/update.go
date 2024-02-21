@@ -14,7 +14,7 @@ import (
 
 func Launch(apiDB *database.Queries, ctxIn context.Context, updateInfoChan chan data.UpdateInfo) {
 	c := cron.New()
-	_, err := c.AddFunc("@every 1m", func() {
+	_, err := c.AddFunc("@every 30s", func() {
 		log.Println("Update cycle started")
 		updateItems(apiDB, ctxIn, updateInfoChan)
 	})
@@ -82,14 +82,30 @@ func processItem(apiDB *database.Queries, ctx context.Context, item *database.It
 
 	updateInfo := data.UpdateInfo{
 		Status: "",
-		Item:   parsedData,
 	}
+
+	if !parsedData.Available {
+		updateInfo.Item = &data.ProductData{
+			Name:      item.Name,
+			Brand:     item.Brand,
+			Available: false,
+			Price:     price,
+			URL:       item.Url,
+			Sizes:     nil,
+		}
+	} else {
+		updateInfo.Item = parsedData
+	}
+	updateInfo.CurrentPrice = updateInfo.Item.Price
+	updateInfo.PreviousPrice = price
+
 	switch {
-	case parsedData.Available == false:
+	case updateInfo.Item.Available == false:
 		updateInfo.Status = data.UpdateStatusNotAvailable
-	case parsedData.Price > price:
+	case updateInfo.Item.Price > price:
 		updateInfo.Status = data.UpdateStatusHigherPrice
-	case parsedData.Price < price:
+
+	case updateInfo.Item.Price < price:
 		updateInfo.Status = data.UpdateStatusLowerPrice
 	}
 

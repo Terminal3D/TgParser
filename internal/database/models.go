@@ -10,6 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type BotUser struct {
+	ID         int32
+	ChatID     int64
+	Username   sql.NullString
+	Subscribed bool
+}
+
 type Item struct {
 	ID        uuid.UUID
 	Name      string

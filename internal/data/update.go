@@ -7,6 +7,8 @@ const (
 )
 
 type UpdateInfo struct {
-	Status string
-	Item   *ProductData
+	Status        string
+	Item          *ProductData
+	PreviousPrice float64
+	CurrentPrice  float64
 }

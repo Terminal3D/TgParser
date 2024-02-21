@@ -3,8 +3,10 @@ package tgbot
 import (
 	"TgParser/internal/data"
 	"TgParser/internal/database"
+	"database/sql"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"log"
 	"strings"
 )
 
@@ -45,12 +47,76 @@ func handleCallbacks(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 
 func handleCommand(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 	command := update.Message.Command()
+	chatID := update.Message.Chat.ID
+	username := update.Message.Chat.UserName
+
+	subscribeMsg := "Вы успешно подписались на обновления о товарах. " +
+		"Введите /unsubscribe чтобы отписаться."
+
 	switch command {
 	case "start":
-		if err := showStartMenu(bot, update.Message.Chat.ID); err != nil {
+		status, err := apiDB.CheckUserExists(ctx, chatID)
+		if err != nil {
+			return err
+		}
+
+		if !status {
+			_, err := apiDB.InsertUser(ctx, database.InsertUserParams{
+				ChatID:     chatID,
+				Username:   sql.NullString{String: username, Valid: true},
+				Subscribed: true,
+			})
+
+			if err != nil {
+				log.Printf("Ошибка при добавлении пользователя: %v", err)
+				return err
+			}
+			if _, err = bot.Send(tgbotapi.NewMessage(chatID, subscribeMsg)); err != nil {
+				return err
+			}
+		}
+
+		if err := showStartMenu(bot, chatID); err != nil {
+			return err
+		}
+
+	case "stop":
+		err := apiDB.DeleteUser(ctx, chatID)
+		if err != nil {
+			log.Printf("Ошибка при удалении пользователя: %v", err)
+			return err
+		}
+		if _, err = bot.Send(tgbotapi.NewMessage(chatID, "Все данные успешно удалены.")); err != nil {
+			return err
+		}
+
+	case "subscribe":
+		err := apiDB.ChangeSubscription(ctx, database.ChangeSubscriptionParams{
+			Subscribed: true,
+			ChatID:     chatID,
+		})
+		if err != nil {
+			log.Printf("Ошибка при подписке пользователя: %v", err)
+			return err
+		}
+		if _, err = bot.Send(tgbotapi.NewMessage(chatID, "Вы подписались на обновления.")); err != nil {
+			return err
+		}
+
+	case "unsubscribe":
+		err := apiDB.ChangeSubscription(ctx, database.ChangeSubscriptionParams{
+			Subscribed: false,
+			ChatID:     chatID,
+		})
+		if err != nil {
+			log.Printf("Ошибка при отписке пользователя: %v", err)
+			return err
+		}
+		if _, err = bot.Send(tgbotapi.NewMessage(chatID, "Вы отписались от обновлений.")); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -78,9 +144,12 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 			}
 			return err
 		}
-
-		if err = displayData(bot, chatID, productData); err != nil {
-			return err
+		if !productData.Available {
+			if err = displayData(bot, chatID, productData); err != nil {
+				return err
+			}
+		} else {
+			bot.Send(tgbotapi.NewMessage(chatID, "Предмет не доступен (некорректный URL или нет в наличии)"))
 		}
 
 		if err = showStartMenu(bot, update.Message.Chat.ID); err != nil {
