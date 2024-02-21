@@ -25,6 +25,7 @@ type Item struct {
 	Available bool
 	Url       string
 	LastCheck sql.NullTime
+	ChatID    int64
 }
 
 type Size struct {

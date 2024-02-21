@@ -62,7 +62,7 @@ func ParseSP(resp *http.Response) (data.ProductData, error) {
 
 func parseName(resp *bytes.Reader) string {
 	tokenizer := html.NewTokenizer(resp)
-	name, err := blockTextByID(tokenizer, "span", "lblProductName")
+	name, err := blockTextByKey(tokenizer, "span", "lblProductName", "id")
 	if err != nil {
 		log.Print(err)
 		log.Println(" for name")
@@ -74,7 +74,7 @@ func parseName(resp *bytes.Reader) string {
 func parseBrand(resp *bytes.Reader) string {
 
 	tokenizer := html.NewTokenizer(resp)
-	brand, err := blockTextByID(tokenizer, "span", "lblProductBrand")
+	brand, err := blockTextByKey(tokenizer, "span", "lblProductBrand", "id")
 	if err != nil {
 		log.Print(err)
 		log.Println(" for brand")
@@ -101,7 +101,7 @@ func parseAvailable(parsedData *data.ProductData) bool {
 
 func parsePrice(resp *bytes.Reader) float64 {
 	tokenizer := html.NewTokenizer(resp)
-	price, err := blockTextByID(tokenizer, "span", "lblSellingPrice")
+	price, err := blockTextByKey(tokenizer, "span", "lblSellingPrice", "id")
 	if err != nil {
 		log.Println(err)
 		return -1.0

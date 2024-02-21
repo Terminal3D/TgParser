@@ -12,9 +12,9 @@ import (
 )
 
 const insertItem = `-- name: InsertItem :one
-INSERT INTO item (id, name, brand, price, available, url)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, name, brand, price, available, url, last_check
+INSERT INTO item (id, name, brand, price, available, url, chat_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, name, brand, price, available, url, last_check, chat_id
 `
 
 type InsertItemParams struct {
@@ -24,6 +24,7 @@ type InsertItemParams struct {
 	Price     string
 	Available bool
 	Url       string
+	ChatID    int64
 }
 
 func (q *Queries) InsertItem(ctx context.Context, arg InsertItemParams) (Item, error) {
@@ -34,6 +35,7 @@ func (q *Queries) InsertItem(ctx context.Context, arg InsertItemParams) (Item, e
 		arg.Price,
 		arg.Available,
 		arg.Url,
+		arg.ChatID,
 	)
 	var i Item
 	err := row.Scan(
@@ -44,6 +46,7 @@ func (q *Queries) InsertItem(ctx context.Context, arg InsertItemParams) (Item, e
 		&i.Available,
 		&i.Url,
 		&i.LastCheck,
+		&i.ChatID,
 	)
 	return i, err
 }

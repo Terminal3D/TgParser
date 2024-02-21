@@ -11,15 +11,16 @@ import (
 
 const deleteItem = `-- name: DeleteItem :exec
 DELETE FROM item
-WHERE name = $1 AND brand = $2
+WHERE name = $1 AND brand = $2 AND chat_id = $3
 `
 
 type DeleteItemParams struct {
-	Name  string
-	Brand string
+	Name   string
+	Brand  string
+	ChatID int64
 }
 
 func (q *Queries) DeleteItem(ctx context.Context, arg DeleteItemParams) error {
-	_, err := q.db.ExecContext(ctx, deleteItem, arg.Name, arg.Brand)
+	_, err := q.db.ExecContext(ctx, deleteItem, arg.Name, arg.Brand, arg.ChatID)
 	return err
 }

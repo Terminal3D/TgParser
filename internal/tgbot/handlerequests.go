@@ -36,7 +36,7 @@ func handleFiltersPick(bot *tgbotapi.BotAPI, chatID int64, callbackData string) 
 	switch callbackData {
 	case "no_filter":
 		userStates.Delete(chatID)
-		items, err := apiDB.GetAllItems(ctx)
+		items, err := apiDB.GetAllItems(ctx, chatID)
 		if err != nil {
 			return err
 		}

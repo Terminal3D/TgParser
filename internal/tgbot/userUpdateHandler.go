@@ -137,14 +137,14 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 
 			return nil
 		}
-		productData, err := HandleAddItem(url, apiDB, ctx)
+		productData, err := HandleAddItem(url, chatID, apiDB, ctx)
 		if err != nil {
 			if _, err1 := bot.Send(tgbotapi.NewMessage(chatID, err.Error())); err1 != nil {
 				return fmt.Errorf("failed to send message for error: %v. sending error: %v", err, err1)
 			}
 			return err
 		}
-		if !productData.Available {
+		if productData.Available {
 			if err = displayData(bot, chatID, productData); err != nil {
 				return err
 			}
@@ -161,7 +161,10 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 		userStates.Delete(chatID)
 		name := strings.TrimSpace(update.Message.Text)
 
-		items, err := apiDB.GetItemsByName(ctx, name)
+		items, err := apiDB.GetItemsByName(ctx, database.GetItemsByNameParams{
+			Name:   name,
+			ChatID: chatID,
+		})
 		if err != nil {
 			return err
 		}
@@ -175,7 +178,10 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 		userStates.Delete(chatID)
 		brand := strings.TrimSpace(update.Message.Text)
 
-		items, err := apiDB.GetItemsByBrand(ctx, brand)
+		items, err := apiDB.GetItemsByBrand(ctx, database.GetItemsByBrandParams{
+			Brand:  brand,
+			ChatID: chatID,
+		})
 		if err != nil {
 			return err
 		}
@@ -189,7 +195,10 @@ func handleMessage(bot *tgbotapi.BotAPI, update *tgbotapi.Update) error {
 		userStates.Delete(chatID)
 		price := strings.TrimSpace(update.Message.Text)
 
-		items, err := apiDB.GetItemsByMaxPrice(ctx, price)
+		items, err := apiDB.GetItemsByMaxPrice(ctx, database.GetItemsByMaxPriceParams{
+			Price:  price,
+			ChatID: chatID,
+		})
 		if err != nil {
 			return err
 		}

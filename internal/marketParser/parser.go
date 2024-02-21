@@ -15,6 +15,7 @@ func RunParser(inputURL string) (*data.ProductData, error) {
 	}
 
 	resp, err := http.Get(uri.String())
+
 	if err != nil {
 		return &data.ProductData{Available: false, URL: inputURL}, err
 	}

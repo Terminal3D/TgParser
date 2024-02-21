@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func HandleAddItem(inputURL string, apiDB *database.Queries, ctx context.Context) (*data.ProductData, error) {
+func HandleAddItem(inputURL string, chatID int64, apiDB *database.Queries, ctx context.Context) (*data.ProductData, error) {
 
 	parsedData, err := marketParser.RunParser(inputURL)
 	if err != nil {
@@ -25,11 +25,13 @@ func HandleAddItem(inputURL string, apiDB *database.Queries, ctx context.Context
 		Price:     fmt.Sprintf("%.2f", parsedData.Price),
 		Available: parsedData.Available,
 		Url:       inputURL,
+		ChatID:    chatID,
 	}
 
 	apiDB.DeleteItem(ctx, database.DeleteItemParams{
-		Name:  insertParamsItem.Name,
-		Brand: insertParamsItem.Brand,
+		Name:   insertParamsItem.Name,
+		Brand:  insertParamsItem.Brand,
+		ChatID: chatID,
 	})
 
 	item, err := apiDB.InsertItem(ctx, insertParamsItem)

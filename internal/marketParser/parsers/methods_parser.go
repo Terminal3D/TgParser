@@ -12,13 +12,13 @@ import (
 const ItemSizeAttrSP = "data-text"
 const ItemQuantityAttrSP = "data-stock-qty"
 
-func findTag(tokenizer *html.Tokenizer, blockName string, id string) error {
+func findTag(tokenizer *html.Tokenizer, blockName string, value string, key string) error {
 
 	for {
 		tt := tokenizer.Next()
 		switch {
 		case tt == html.ErrorToken:
-			return fmt.Errorf("%s for %s block not found", id, blockName)
+			return fmt.Errorf("%s for %s block not found", value, blockName)
 
 		case tt == html.StartTagToken:
 			token := tokenizer.Token()
@@ -28,7 +28,7 @@ func findTag(tokenizer *html.Tokenizer, blockName string, id string) error {
 			}
 
 			for _, attr := range token.Attr {
-				if attr.Key == "id" && attr.Val == id {
+				if attr.Key == key && attr.Val == value {
 					return nil
 				}
 			}
@@ -36,16 +36,37 @@ func findTag(tokenizer *html.Tokenizer, blockName string, id string) error {
 	}
 }
 
-func blockTextByID(tokenizer *html.Tokenizer, blockName string, id string) (string, error) {
-	err := findTag(tokenizer, blockName, id)
+func blockTextByKey(tokenizer *html.Tokenizer, blockName string, value string, key string) (string, error) {
+	err := findTag(tokenizer, blockName, value, key)
 	if err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(text(tokenizer)), nil
 }
 
+func text(tokenizer *html.Tokenizer) string {
+	var text strings.Builder
+	depth := 1
+	for {
+		tt := tokenizer.Next()
+		switch tt {
+		case html.ErrorToken, html.EndTagToken:
+			depth--
+			if depth <= 0 {
+				return text.String()
+			}
+		case html.StartTagToken, html.SelfClosingTagToken:
+			depth++
+		case html.TextToken:
+			if depth == 1 {
+				text.WriteString(tokenizer.Token().Data)
+			}
+		}
+	}
+}
+
 func sizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]data.SizeData, error) {
-	err := findTag(tokenizer, listType, id)
+	err := findTag(tokenizer, listType, id, "id")
 	if err != nil {
 		return nil, err
 	}
@@ -79,27 +100,6 @@ func sizesListSP(tokenizer *html.Tokenizer, listType string, id string) ([]data.
 			token := tokenizer.Token()
 			if token.Data == listType {
 				return sizes, nil
-			}
-		}
-	}
-}
-
-func text(tokenizer *html.Tokenizer) string {
-	var text strings.Builder
-	depth := 1
-	for {
-		tt := tokenizer.Next()
-		switch tt {
-		case html.ErrorToken, html.EndTagToken:
-			depth--
-			if depth <= 0 {
-				return text.String()
-			}
-		case html.StartTagToken, html.SelfClosingTagToken:
-			depth++
-		case html.TextToken:
-			if depth == 1 {
-				text.WriteString(tokenizer.Token().Data)
 			}
 		}
 	}

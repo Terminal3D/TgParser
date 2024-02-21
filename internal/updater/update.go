@@ -70,7 +70,7 @@ func calculateInterval(totalItems int) int {
 
 func processItem(apiDB *database.Queries, ctx context.Context, item *database.Item) (data.UpdateInfo, error) {
 
-	parsedData, err := tgbot.HandleAddItem(item.Url, apiDB, ctx)
+	parsedData, err := tgbot.HandleAddItem(item.Url, item.ChatID, apiDB, ctx)
 	if err != nil {
 		return data.UpdateInfo{}, err
 	}

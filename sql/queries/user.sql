@@ -21,3 +21,7 @@ SELECT EXISTS(
 
 -- name: GetSubscribedUsers :many
 SELECT chat_id, username FROM bot_user WHERE subscribed = true;
+
+
+-- name: GetUserById :many
+SELECT username, subscribed FROM bot_user WHERE chat_id = $1;
