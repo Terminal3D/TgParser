@@ -64,8 +64,7 @@ func parseName(resp *bytes.Reader) string {
 	tokenizer := html.NewTokenizer(resp)
 	name, err := blockTextByKey(tokenizer, "span", "lblProductName", "id")
 	if err != nil {
-		log.Print(err)
-		log.Println(" for name")
+		log.Println(err, " for name")
 		return ""
 	}
 	return name
@@ -76,8 +75,7 @@ func parseBrand(resp *bytes.Reader) string {
 	tokenizer := html.NewTokenizer(resp)
 	brand, err := blockTextByKey(tokenizer, "span", "lblProductBrand", "id")
 	if err != nil {
-		log.Print(err)
-		log.Println(" for brand")
+		log.Println(err, " for brand")
 		return ""
 	}
 	return brand
@@ -124,5 +122,6 @@ func parseSizes(resp *bytes.Reader) []data.SizeData {
 		log.Println(err)
 		return []data.SizeData{}
 	}
+
 	return sizes
 }
