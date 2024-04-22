@@ -122,5 +122,6 @@ func parseSizes(resp *bytes.Reader) []data.SizeData {
 		log.Println(err)
 		return []data.SizeData{}
 	}
+
 	return sizes
 }
